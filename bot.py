@@ -1,6 +1,9 @@
-import requests
 import telebot
 from telebot import types
+from datetime import date
+import time
+import schedule
+import threading
 
 import config
 import db
@@ -11,7 +14,7 @@ bot = telebot.TeleBot(config.token)
 
 resp = None
 
-db = db.SQLighter('identifier.sqlite')
+db = db.DataBase()
 
 
 def gen_menu(bots, message, way, button):
@@ -46,7 +49,8 @@ def step_two(message):
     markup = types.ReplyKeyboardRemove(selective=False)
 
     if message.text == mn.menu[0]:
-        resp = requests.get(config.url_latest).json()
+        temp_date = date.today()
+        resp = db.get_rates(str(temp_date))
         markup = gen_menu(bot, message, way_1, mn.btn_all)
         pass
 
@@ -76,45 +80,59 @@ def way_2(message):
     '''Спрашивает за какую дату он хочет узнать и направляет в way_1'''
     global resp
     markup = types.ReplyKeyboardRemove(selective=False)
-    date = message.text.split('.')
-    date = f'{date[2]}-{date[1]}-{date[0]}'
-    resp = requests.get(
-        config.url_date_first + date + config.url_date_last).json()
+    temp_date = message.text.split('.')
+    temp_date = date(temp_date[2], temp_date[1], temp_date[0])
+    resp = db.get_rates(str(temp_date))
     markup = gen_menu(bot, message, way_1, mn.btn_all)
     pass
 
 
 @bot.message_handler(commands=['sub'])
 def subscribe(message):
-    if (not db.subscriber_exists(message.from_user.id)):
-        # если юзера нет в базе, добавляем его
-        db.add_subscriber(message.from_user.id)
-    else:
-        # если он уже есть, то просто обновляем ему статус подписки
-        db.update_subscription(message.from_user.id, True)
-    bot.send_message(message.chat.id, ms.sub)
+    msg = db.add_sub(str(message.from_user.id))
+    bot.send_message(message.chat.id, msg)
     pass
 
 
 @bot.message_handler(commands=['unsub'])
 def unsubscribe(message):
-    if (not db.subscriber_exists(message.from_user.id)):
-        # если юзера нет в базе, добавляем его с неактивной подпиской
-        db.add_subscriber(message.from_user.id, False)
-        bot.send_message(message.chat.id, ms.unsub_1)
-    else:
-        # если он уже есть, то просто обновляем ему статус подписки
-        db.update_subscription(message.from_user.id, False)
-        bot.send_message(message.chat.id, ms.unsub_2)
+    msg = db.unsub(str(message.from_user.id))
+    bot.send_message(message.chat.id, msg)
 
 
 @bot.message_handler(commands=['sndmsgall'])
 def mess(message):
-    resp = requests.get(config.url_latest).json()
-    subs = db.get_subscriptions()
+    resp = db.update_data()
+    subs = db.get_subs()
     for user in subs:
         bot.send_message(user[1], ms.mess_gen(resp), parse_mode="Markdown")
 
 
+def run_threaded(func):
+    job_thread = threading.Thread(target=func)
+    job_thread.start()
+
+
+def mailing():
+    markup = types.ReplyKeyboardRemove(selective=False)
+    temp_date = date.today()
+    resp = db.get_rates(str(temp_date))
+    for user in db.get_subs():
+        bot.send_message(user, ms.mess_gen(resp),
+                         reply_markup=markup,
+                         parse_mode="Markdown")
+
+
+bot_thread = threading.Thread(target=bot.polling)
+bot_thread.start()
+schedule.every().day.at("09:00").do(run_threaded, mailing)
+
+
+def main_loop():
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+
 if __name__ == '__main__':
-    bot.polling(none_stop=True)
+    main_loop()
