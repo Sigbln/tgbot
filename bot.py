@@ -78,7 +78,7 @@ def way_1(message):
 def way_2(message):
     '''Спрашивает за какую дату он хочет узнать и направляет в way_1'''
     global resp
-    markup = types.ReplyKeyboardRemove(selective=False)
+    types.ReplyKeyboardRemove(selective=False)
     temp_date = message.text.split('.')
     temp_date = date(temp_date[2], temp_date[1], temp_date[0])
     resp = db.get_rates(str(temp_date))
