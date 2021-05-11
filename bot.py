@@ -27,7 +27,6 @@ def gen_menu(bots, message, way, button):
                             ms.ans_1,
                             reply_markup=markup)
     bots.register_next_step_handler(msg, way)
-    return markup
 
 
 @bot.message_handler(commands=['start', 'help'])
@@ -51,7 +50,7 @@ def step_two(message):
     if message.text == mn.menu[0]:
         temp_date = date.today()
         resp = db.get_rates(str(temp_date))
-        markup = gen_menu(bot, message, way_1, mn.btn_all)
+        gen_menu(bot, message, way_1, mn.btn_all)
         pass
 
     elif message.text == mn.menu[1]:
@@ -83,7 +82,7 @@ def way_2(message):
     temp_date = message.text.split('.')
     temp_date = date(temp_date[2], temp_date[1], temp_date[0])
     resp = db.get_rates(str(temp_date))
-    markup = gen_menu(bot, message, way_1, mn.btn_all)
+    gen_menu(bot, message, way_1, mn.btn_all)
     pass
 
 

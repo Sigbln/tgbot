@@ -8,14 +8,14 @@ class TestMess_gen(unittest.TestCase):
     def setUp(self):
         self.test_resp = {'base': 'EUR', 'date': '2021-02-14',
                           'rates': {'BTC': 1, 'RUB': 2, 'BYN': 3}}
-        self.ans_all = f'*Курс на:* 14.02.2021\n' \
-                       f'\n*1 EUR* = 1 BTC' \
-                       f'\n*1 EUR* = 2 RUB' \
-                       f'\n*1 EUR* = 3 BYN'
-        self.ans_byn = f'*Курс на:* 14.02.2021\n' \
-                       f'\n*1 EUR* = 3 BYN'
-        self.ans_no_wallet = f'Извините, мы ничего не знаем о BRU\n' \
-                             f'Возможно вы ввели неправильное имя'
+        self.ans_all = '*Курс на:* 14.02.2021\n' \
+                       '\n*1 EUR* = 1 BTC' \
+                       '\n*1 EUR* = 2 RUB' \
+                       '\n*1 EUR* = 3 BYN'
+        self.ans_byn = '*Курс на:* 14.02.2021\n' \
+                       '\n*1 EUR* = 3 BYN'
+        self.ans_no_wallet = 'Извините, мы ничего не знаем о BRU\n' \
+                             'Возможно вы ввели неправильное имя'
         self.coin = 'RUB'
         self.test_func = mess_gen
 
