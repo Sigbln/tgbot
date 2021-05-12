@@ -1,5 +1,5 @@
-import shelve
 import requests
+import shelve
 
 import config
 
