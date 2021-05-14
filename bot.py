@@ -5,7 +5,6 @@ import time
 
 from datetime import date
 from telebot import types
-from telebot import types
 
 import config
 import db
